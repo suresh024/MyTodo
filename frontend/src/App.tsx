@@ -3,6 +3,7 @@ import './App.css'
 import useSWR from "swr";
 import AddTodo from "./components/AddTodo"
 import {CheckCircleFillIcon} from "@primer/octicons-react";
+import {jsx} from "@emotion/react";
 
 export interface Audit{
     created_at:bigint,
@@ -14,7 +15,7 @@ export interface Audit{
 export interface Todo {
     id:string,
     name:string,
-    desciption:string,
+    description:string,
     status:string,
     audit:Audit
 }
@@ -25,9 +26,14 @@ const fetcher = (url:string)=>
 function App() {
     const {data, mutate}=useSWR<Todo[]>('todo/getall',fetcher);
 
-    async function updateStatus(id:string){
-        const updated=await fetch(`${ENDPOINT}/todo/${id}`,{
+    async function updateStatus(todo:Todo){
+        todo.status = (todo.status === "pending") ? "done" : "pending";
+        const updated=await fetch(`${ENDPOINT}/todo/${todo.id}`,{
+            headers: {
+                'Content-Type': 'application/json'
+            },
             method:"PUT",
+            body:JSON.stringify(todo)
 
         }).then((r)=>r.json());
         mutate(updated)
@@ -43,10 +49,10 @@ function App() {
               {data?.map((todo)=>{
                   return (
                       <List.Item
-                          onClick={()=>updateStatus(todo.id)}
+                          onClick={()=>updateStatus(todo)}
                           key={`todo_list__${todo.id}`}
                       icon={
-                          todo.status!="pending" ? (<ThemeIcon color="teal" size={24} radius="xl">
+                          (todo.status !== "pending" && todo.status !== "") ? (<ThemeIcon color="teal" size={24} radius="xl">
                                   <CheckCircleFillIcon size={20}/>
                                   </ThemeIcon>
                           ) : (
