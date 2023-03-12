@@ -74,12 +74,14 @@ func (r *todoRepo) CreateTodo(ctx context.Context, todo models.Todo) (models.Tod
 }
 
 func (r *todoRepo) UpdateTodo(ctx context.Context, todo models.Todo) (models.Todo, error) {
-	todo.ID = cuid.New()
 	filter := bson.M{"id": todo.ID}
 	update := bson.D{{Key: "$set", Value: todo}}
-	_, err := r.todo.UpdateOne(ctx, filter, update)
+	result, err := r.todo.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return todo, err
+	}
+	if result.MatchedCount == 0 {
+		return todo, fmt.Errorf("no documents with this id")
 	}
 	return todo, nil
 }

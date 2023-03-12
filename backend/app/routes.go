@@ -12,7 +12,7 @@ import (
 func runserver(host, port string, h handl.Store) {
 	r := mux.NewRouter()
 	//r := router.Host(host).Subrouter()
-	r = r.StrictSlash(true)
+	//r = r.StrictSlash(true)
 
 	//health check
 	r.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
@@ -24,10 +24,7 @@ func runserver(host, port string, h handl.Store) {
 	r.HandleFunc("/todo/getall", h.TodoHandler.GetAllTodos).Methods("GET")
 	r.HandleFunc("/todo/{todo_id}", h.TodoHandler.UpdateTodo).Methods("PUT")
 
-	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:5173"},
-		AllowedHeaders: []string{"Origin, Content-Type, Accept"},
-	})
+	c := cors.AllowAll()
 
 	handler := c.Handler(r)
 	log.Fatal(http.ListenAndServe(":"+port, handler))
