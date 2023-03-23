@@ -2,6 +2,9 @@ package app
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	redis "github.com/redis/go-redis/v9"
 	handl "github.com/suresh024/MyTodo/handler"
 	todo_handl "github.com/suresh024/MyTodo/handler/todo"
@@ -80,6 +83,23 @@ func Start() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	//graphDb setup
+	driver, err := neo4j.NewDriverWithContext("", neo4j.BasicAuth("", "", ""))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer driver.Close(ctx)
+
+	session := driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+	result, err := session.Run(ctx, "match n return n", map[string]interface{}{"message": "done"})
+	if err != nil {
+		fmt.Printf(err.Error())
+	}
+	some := make([]interface{}, 0)
+	v, _ := json.Marshal(result.Record().Values)
+	json.Unmarshal(v, &some)
 
 	//dependency  setup
 	repoSetup(mongoClient, redisClient, redisRequired)
